@@ -8,8 +8,9 @@ import { InputWithButton } from '../components/TextInput';
 import { ClearButton } from '../components/Buttons';
 import { LastConverted } from '../components/Text';
 import { Header } from '../components/Header';
+import { connectAlert } from '../components/Alert';
 
-import { swapCurrency, changeCurrencyAmount } from '../actions/currencies'
+import { swapCurrency, changeCurrencyAmount, getInitialConversion } from '../actions/currencies';
 
 class Home extends Component {
 
@@ -22,14 +23,27 @@ class Home extends Component {
     isFetching: PropTypes.bool,
     conversionRate: PropTypes.number,
     LastConvertedDate: PropTypes.object,
+    primaryColor: PropTypes.string,
+    alertWithType: PropTypes.func,
+    currencyError: PropTypes.string,
   };
 
+  componentWillMount() {
+    this.props.dispatch(getInitialConversion());
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.currencyError && nextProps.currencyError !== this.props.currencyError) {
+      this.props.alertWithType('error', 'Error', nextProps.currencyError);
+    }
+  }
+
   handlePressBaseCurrency = () => {
-    this.props.navigation.navigate('CurrencyList', { title: 'Base Currency' });
+    this.props.navigation.navigate('CurrencyList', { title: 'Base Currency', type: 'base' });
   };
 
   handlePressQuoteCurrency = () => {
-    this.props.navigation.navigate('CurrencyList', { title: 'Quote Currency' });
+    this.props.navigation.navigate('CurrencyList', { title: 'Quote Currency', type: 'quote' });
   };
 
   handleTextChange = (amount) => {
@@ -54,23 +68,25 @@ class Home extends Component {
     }
 
     return (
-      <Container>
+      <Container backgroundColor={this.props.primaryColor}>
         <StatusBar translucent={false} barStyle="light-content" />
         <Header onPress={this.handleOptionsPress} />
         <KeyboardAvoidingView behavior="padding">
-          <Logo />
+          <Logo tintColor={this.props.primaryColor} />
           <InputWithButton
             buttonText={this.props.baseCurrency}
             onPress={this.handlePressBaseCurrency}
             defaultValue={this.props.amount.toString()}
             keyboardType="numeric"
             onChangeText={this.handleTextChange}
+            textColor={this.props.primaryColor}
           />
           <InputWithButton
             buttonText={this.props.quoteCurrency}
             editable={false}
             onPress={this.handlePressQuoteCurrency}
             value={quotePrice}
+            textColor={this.props.primaryColor}
           />
           <LastConverted
             base={this.props.baseCurrency}
@@ -102,7 +118,9 @@ const mapStateToProps = (state) => {
     conversionRate: rates[quoteCurrency] || 0,
     isFetching: conversionSelector.isFetching,
     LastConvertedDate: conversionSelector.date ? new Date(conversionSelector.date) : new Date(),
+    primaryColor: state.theme.primaryColor,
+    currencyError: state.currencies.error,
   };
 };
 
-export default connect(mapStateToProps)(Home);
+export default connect(mapStateToProps)(connectAlert(Home));

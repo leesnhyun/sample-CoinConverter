@@ -12,6 +12,7 @@ const HomeStack = StackNavigator({
     screen: Home,
     navigationOptions: {
       header: () => null,
+      headerTitle: 'Home',
     },
   },
   Options: {
@@ -24,7 +25,7 @@ const HomeStack = StackNavigator({
     screen: Themes,
     navigationOptions: {
       headerTitle: 'Themes',
-    }
+    },
   },
 }, {
     headerMode: 'screen',
